@@ -10,7 +10,7 @@ import io.micronaut.http.client.annotation.Client
 interface ItauContasClient {
 
     @Get("/api/v1/clientes/{clienteId}/contas{?tipo}")
-    fun buscaContaPorTipo(@PathVariable clienteId: String, @QueryValue tipo: String)
+    fun buscaContaPorTipo(@PathVariable clienteId: String, @QueryValue("tipo") tipo: String)
             : HttpResponse<DadosDaContaResponse>
 }
 
