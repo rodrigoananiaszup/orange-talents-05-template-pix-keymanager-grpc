@@ -15,7 +15,9 @@ import io.micronaut.grpc.annotation.GrpcChannel
 import io.micronaut.grpc.server.GrpcServerChannel
 import io.micronaut.http.HttpResponse
 import io.micronaut.test.annotation.MockBean
+import io.micronaut.test.annotation.TransactionMode
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -25,11 +27,15 @@ import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
-@MicronautTest(transactional = false)
+@MicronautTest(
+    rollback = false,
+    transactional = false,
+    transactionMode = TransactionMode.SINGLE_TRANSACTION
+)
 internal class RegistraChaveEndpointTest(
     private val chavePixRepository: ChavePixRepository,
     private val clientGrpc: PixKeyManagerRegistraGrpcServiceGrpc
-                            .PixKeyManagerRegistraGrpcServiceBlockingStub
+    .PixKeyManagerRegistraGrpcServiceBlockingStub
 ) {
     @field:Inject
     lateinit var itauContasClient: ItauContasClient
@@ -39,7 +45,15 @@ internal class RegistraChaveEndpointTest(
         chavePixRepository.deleteAll()
     }
 
-    //Happy-path
+    @AfterEach
+    internal fun cleanUp() {
+        chavePixRepository.deleteAll()
+    }
+
+    /**
+     * Happy-Path
+     */
+
     @Test
     fun `deve registrar chave pix tipo celular`() {
 
@@ -183,7 +197,10 @@ internal class RegistraChaveEndpointTest(
         }
     }
 
-    //fluxos alternativos
+    /**
+     * FLUXO ALTERNATIVO
+     */
+
     @Test
     fun `nao deve registrar uma nova chave pix invalida`() {
 
@@ -276,7 +293,8 @@ internal class RegistraChaveEndpointTest(
 @Factory
 class Clients {
     @Singleton
-    fun blockingStubs(@GrpcChannel(GrpcServerChannel.NAME) channel: Channel): PixKeyManagerRegistraGrpcServiceGrpc
+    fun blockingStubs(@GrpcChannel(GrpcServerChannel.NAME) channel: Channel)
+            : PixKeyManagerRegistraGrpcServiceGrpc
     .PixKeyManagerRegistraGrpcServiceBlockingStub {
         return PixKeyManagerRegistraGrpcServiceGrpc.newBlockingStub(channel)
     }
