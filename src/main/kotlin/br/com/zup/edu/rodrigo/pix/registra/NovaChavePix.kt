@@ -1,5 +1,7 @@
 package br.com.zup.edu.rodrigo.pix.registra
 
+import br.com.zup.edu.rodrigo.shared.grpc.validacao.ValidPixKey
+import br.com.zup.edu.rodrigo.shared.grpc.validacao.ValidUUID
 import io.micronaut.core.annotation.Introspected
 import java.util.*
 import javax.validation.constraints.NotBlank

@@ -1,5 +1,6 @@
 package br.com.zup.edu.rodrigo.pix.registra
 
+import br.com.zup.edu.rodrigo.shared.grpc.validacao.ValidUUID
 import java.util.*
 import javax.persistence.Column
 import javax.persistence.Embeddable

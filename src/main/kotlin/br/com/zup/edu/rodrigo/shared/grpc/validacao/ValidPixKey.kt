@@ -1,6 +1,7 @@
-package br.com.zup.edu.rodrigo.pix.registra
+package br.com.zup.edu.rodrigo.shared.grpc.validacao
 
 
+import br.com.zup.edu.rodrigo.pix.registra.NovaChavePix
 import io.micronaut.core.annotation.AnnotationValue
 import io.micronaut.validation.validator.constraints.ConstraintValidator
 import io.micronaut.validation.validator.constraints.ConstraintValidatorContext
