@@ -13,19 +13,28 @@ class ContaAssociada(
     @field:NotNull
     @Column(nullable = false)
     val tipo: String,
+
     @field:Valid
     @Embedded
-    val instituicao: Instituicao,
+    var instituicao: Instituicao,
+
     @field:NotNull
     @Column(nullable = false)
     val agencia: String,
+
     @field:NotNull
     @Column(nullable = false)
     val numero: String,
+
     @field:Valid
     @Embedded
     val titular: Titular
 ) {
+
+    companion object {
+        const val ITAU_UNIBANCO_ISBP = "60701190"
+    }
+
 
     @Embeddable
     class Instituicao(

@@ -1,6 +1,12 @@
 micronaut:
   application:
     name: pixKeyManager
+    http:
+      client:
+        logger-name: logger
+      services:
+        otherClient:
+          logger-name: other.client
 
 grpc:
   server:
@@ -24,3 +30,7 @@ jpa.default.properties.hibernate.format_sql: true
 itau:
   contas:
     url: ${ITAU_CONTAS_URL:`http://localhost:9091/`}
+
+bcb:
+  pix:
+    url: ${BCB_PIX_URL:`http://localhost:8082/`}

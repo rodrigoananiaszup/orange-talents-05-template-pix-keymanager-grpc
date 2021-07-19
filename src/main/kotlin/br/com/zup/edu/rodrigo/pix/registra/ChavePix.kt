@@ -26,7 +26,7 @@ class ChavePix(
     val tipoChave: TipoChave?,
     @field:NotBlank
     @Column(unique = true, nullable = false)
-    val chave: String,
+    var chave: String,
     @field:NotNull
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -44,6 +44,16 @@ class ChavePix(
 
     override fun toString(): String {
         return "ChavePix(clienteId=$clienteId, tipoChave=$tipoChave, chave='$chave', tipoConta=$tipoConta, conta=$conta, id=$id, criadaEm=$criadaEm)"
+    }
+
+    fun isChaveAleatoria(): Boolean {
+        return this.tipoChave == TipoChave.ALEATORIA
+    }
+
+    fun atualiza(chaveGerada: String) {
+        if (isChaveAleatoria()) {
+            chave = chaveGerada
+        }
     }
 
 }

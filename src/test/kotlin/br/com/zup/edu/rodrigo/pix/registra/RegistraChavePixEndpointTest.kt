@@ -40,6 +40,8 @@ internal class RegistraChaveEndpointTest(
     @field:Inject
     lateinit var itauContasClient: ItauContasClient
 
+
+    //cenario
     @BeforeEach
     fun setUp() {
         chavePixRepository.deleteAll()
@@ -93,6 +95,8 @@ internal class RegistraChaveEndpointTest(
     @Test
     fun `deve registrar chave pix tipo cpf`() {
 
+
+        //Ação
         val request = RegistraChavePixRequest.newBuilder()
             .setClienteId("c56dfef4-7901-44fb-84e2-a2cefb157890")
             .setTipoDeChave(CPF)
@@ -120,6 +124,7 @@ internal class RegistraChaveEndpointTest(
 
         val response = clientGrpc.registra(request)
 
+        //Validação
         with(response) {
             assertNotNull(pixId)
             assertTrue(chavePixRepository.existsById(UUID.fromString(pixId)))
