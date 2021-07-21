@@ -11,25 +11,19 @@ import javax.transaction.Transactional
 
 @ErrorHandler
 @Singleton
-class RegistraChavePixEndpoint(
+class RegistraChaveEndpoint(
     @Inject val registraChave: RegistraChave
 ) : PixKeyManagerRegistraGrpcServiceGrpc.PixKeyManagerRegistraGrpcServiceImplBase() {
 
-    @Transactional
-    override fun registra(
-        request: RegistraChavePixRequest,
-        responseObserver: StreamObserver<RegistraChavePixResponse>
-    ) {
-        val novaChavePix = request.paraNovaChavePix()
+    override fun registra(request: RegistraChavePixRequest, responseObserver: StreamObserver<RegistraChavePixResponse>) {
+        val novaChavePix = request.toModel()
         val chaveCriada = registraChave.registra(novaChavePix)
-
-
         responseObserver.onNext(
             RegistraChavePixResponse.newBuilder()
                 .setPixId(chaveCriada.id.toString())
                 .setClienteId(chaveCriada.clienteId.toString())
                 .build()
         )
-        responseObserver.onCompleted()
+        responseObserver.onCompleted();
     }
 }

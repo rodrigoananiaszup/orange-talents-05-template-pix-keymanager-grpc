@@ -8,29 +8,29 @@ import javax.validation.constraints.NotBlank
 import javax.validation.constraints.NotNull
 
 @Entity
-@Table(
-    uniqueConstraints = [
-        UniqueConstraint(
-            name = "uk_chave_pix",
-            columnNames = ["chave"]
-        )
-    ]
-)
+@Table(uniqueConstraints = [UniqueConstraint(
+    name = "uk_chave_pix",
+    columnNames = ["chave"]
+)])
 class ChavePix(
     @field:NotNull
     @Column(nullable = false)
     val clienteId: UUID,
+
     @field:NotNull
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    val tipoChave: TipoChave?,
+    val tipoDeChave: TipoChave,
+
     @field:NotBlank
     @Column(unique = true, nullable = false)
     var chave: String,
+
     @field:NotNull
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    val tipoConta: TipoConta?,
+    val tipoDeConta: TipoConta,
+
     @field:Valid
     @Embedded
     val conta: ContaAssociada
@@ -43,17 +43,21 @@ class ChavePix(
     val criadaEm: LocalDateTime = LocalDateTime.now()
 
     override fun toString(): String {
-        return "ChavePix(clienteId=$clienteId, tipoChave=$tipoChave, chave='$chave', tipoConta=$tipoConta, conta=$conta, id=$id, criadaEm=$criadaEm)"
+        return "ChavePix(clienteId=$clienteId, tipo=$tipoDeChave, chave='$chave', tipoDeConta=$tipoDeConta, conta=$conta, id=$id, criadaEm=$criadaEm)"
     }
 
-    fun isChaveAleatoria(): Boolean {
-        return this.tipoChave == TipoChave.ALEATORIA
+
+    fun isAleatoria(): Boolean {
+        return tipoDeChave == TipoChave.ALEATORIA
     }
 
-    fun atualiza(chaveGerada: String) {
-        if (isChaveAleatoria()) {
-            chave = chaveGerada
+
+    fun atualiza(chave: String): Boolean {
+        if (isAleatoria()) {
+            this.chave = chave
+            return true
         }
+        return false
     }
 
 }

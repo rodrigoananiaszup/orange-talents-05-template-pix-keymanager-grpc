@@ -8,19 +8,24 @@ import io.grpc.stub.StreamObserver
 import javax.inject.Inject
 import javax.inject.Singleton
 
-@ErrorHandler
+@ErrorHandler // 1
 @Singleton
-class RemoveChavePixEndpoint(
-    @Inject val removeChavePix: RemoveChavePix) : PixKeyManagerRemoveGrpcServiceGrpc.PixKeyManagerRemoveGrpcServiceImplBase() {
+class RemoveChaveEndpoint(@Inject private val service: RemoveChavePix,) // 1
+    : PixKeyManagerRemoveGrpcServiceGrpc.PixKeyManagerRemoveGrpcServiceImplBase() { // 1
 
-    override fun remove(request: RemoveChavePixRequest, responseObserver: StreamObserver<RemoveChavePixResponse>) {
-        val dto = request.paraRemoveChavePixDTO()
-        val chaveRemovida = removeChavePix.remove(dto)
-        responseObserver.onNext(
-            RemoveChavePixResponse.newBuilder()
-                .setPixId(chaveRemovida.id.toString())
-                .build()
-        )
+    // 5
+    override fun remove(
+        request: RemoveChavePixRequest, // 1
+        responseObserver: StreamObserver<RemoveChavePixResponse>, // 1
+    ) {
+
+        service.remove(clienteId = request.clienteId, pixId = request.pixId)
+
+        responseObserver.onNext(RemoveChavePixResponse.newBuilder() // 1
+            .setClienteId(request.clienteId)
+            .setPixId(request.pixId)
+            .build())
         responseObserver.onCompleted()
     }
+
 }

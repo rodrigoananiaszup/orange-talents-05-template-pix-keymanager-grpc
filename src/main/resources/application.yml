@@ -1,12 +1,7 @@
 micronaut:
   application:
     name: pixKeyManager
-    http:
-      client:
-        logger-name: logger
-      services:
-        otherClient:
-          logger-name: other.client
+
 
 grpc:
   server:
@@ -33,4 +28,4 @@ itau:
 
 bcb:
   pix:
-    url: ${BCB_PIX_URL:`http://localhost:8082/`}
+    url: ${BCB_URL:`http://localhost:8082/`}

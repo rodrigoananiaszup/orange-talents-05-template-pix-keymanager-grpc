@@ -11,27 +11,25 @@ import javax.validation.constraints.Size
 @ValidPixKey
 @Introspected
 data class NovaChavePix(
-    @field:NotBlank
     @field:ValidUUID
-    val clienteId: String,
+    @field:NotBlank
+    val clienteId: String?,
     @field:NotNull
-    val tipoChave: TipoChave?,
+    val tipo: TipoChave?,
     @field:Size(max = 77)
-    val chave: String,
+    val chave: String?,
     @field:NotNull
-    val tipoConta: TipoConta?
+    val tipoDeConta: TipoConta?
 ) {
+
     fun toModel(conta: ContaAssociada): ChavePix {
         return ChavePix(
             clienteId = UUID.fromString(this.clienteId),
-            tipoChave = this.tipoChave!!,
-            chave =
-            if (this.tipoChave == TipoChave.ALEATORIA)
-                UUID.randomUUID().toString()
-            else
-                this.chave,
-            tipoConta = this.tipoConta!!,
+            tipoDeChave = TipoChave.valueOf(this.tipo!!.name),
+            chave = if (this.tipo == TipoChave.ALEATORIA) UUID.randomUUID().toString() else this.chave!!,
+            tipoDeConta = TipoConta.valueOf(this.tipoDeConta!!.name),
             conta = conta
         )
     }
+
 }

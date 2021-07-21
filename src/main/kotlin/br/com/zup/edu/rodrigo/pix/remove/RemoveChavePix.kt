@@ -1,17 +1,16 @@
 package br.com.zup.edu.rodrigo.pix.remove
 
 import br.com.zup.edu.rodrigo.integration.bcb.BancoCentralClient
-import br.com.zup.edu.rodrigo.integration.bcb.DeletePixRequest
-import br.com.zup.edu.rodrigo.pix.registra.ChavePix
+import br.com.zup.edu.rodrigo.integration.bcb.DeletePixKeyRequest
 import br.com.zup.edu.rodrigo.pix.registra.ChavePixRepository
+import br.com.zup.edu.rodrigo.shared.grpc.validacao.ValidUUID
 import io.micronaut.http.HttpStatus
 import io.micronaut.validation.Validated
-import javax.inject.Inject
-import org.slf4j.LoggerFactory
 import java.util.*
+import javax.inject.Inject
 import javax.inject.Singleton
 import javax.transaction.Transactional
-import javax.validation.Valid
+import javax.validation.constraints.NotBlank
 
 
 @Singleton
@@ -21,34 +20,26 @@ class RemoveChavePix(
     @Inject val bcbClient: BancoCentralClient
 ) {
 
-    private val logger = LoggerFactory.getLogger(this::class.java)
-
 
     @Transactional
-    fun remove(@Valid dto: RemoveChavePixDto): ChavePix {
+    fun remove(
+        @NotBlank @ValidUUID clienteId: String?,
+        @NotBlank @ValidUUID pixId: String?,
+    ) {
 
-        val possivelChavePix = chavePixRepository.findByIdAndClienteId(
-            id = UUID.fromString(dto.pixId),
-            clientId = UUID.fromString(dto.clienteId)
-        )
+        val uuidPixId = UUID.fromString(pixId)
+        val uuidClienteId = UUID.fromString(clienteId)
 
-        if (possivelChavePix.isEmpty) {
-            throw ChavePixNaoEncontradaException("Chave Pix não encontrada.")
-        }
-        val chavePix = possivelChavePix.get()
+        val chave = chavePixRepository.findByIdAndClienteId(uuidPixId, uuidClienteId)
+            .orElseThrow { ChavePixNaoEncontradaException("Chave Pix não encontrada ou não pertence ao cliente") }
 
-        val bcbResponse = bcbClient.delete(
-            key = chavePix.chave,
-            request = DeletePixRequest(chavePix.chave)
-        )
+        chavePixRepository.delete(chave)
 
+        val request = DeletePixKeyRequest(chave.chave)
+
+        val bcbResponse = bcbClient.delete(key = chave.chave, request = request)
         if (bcbResponse.status != HttpStatus.OK) {
-            throw IllegalStateException("Error ao remover chave no Banco Central")
+            throw IllegalStateException("Erro ao remover chave Pix no Banco Central do Brasil (BCB)")
         }
-
-        chavePixRepository.delete(chavePix)
-        logger.info("Chave Pix (${chavePix.id}) removida.")
-
-        return chavePix
     }
 }

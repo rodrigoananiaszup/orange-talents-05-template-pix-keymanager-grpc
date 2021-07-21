@@ -6,10 +6,7 @@ import br.com.zup.edu.rodrigo.pix.registra.TipoChave
 import br.com.zup.edu.rodrigo.pix.registra.TipoConta
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.MediaType
-import io.micronaut.http.annotation.Body
-import io.micronaut.http.annotation.Delete
-import io.micronaut.http.annotation.PathVariable
-import io.micronaut.http.annotation.Post
+import io.micronaut.http.annotation.*
 import io.micronaut.http.client.annotation.Client
 import java.time.LocalDateTime
 
@@ -19,59 +16,59 @@ interface BancoCentralClient {
     @Post(
         "/api/v1/pix/keys",
         produces = [MediaType.APPLICATION_XML],
-        consumes = [MediaType.APPLICATION_XML],
+        consumes = [MediaType.APPLICATION_XML]
     )
-    fun create(@Body request: CreatePixRequest): HttpResponse<CreatePixResponse>
+    fun create(@Body request: CreatePixKeyRequest): HttpResponse<CreatePixKeyResponse>
 
-    @Delete(
-        "/api/v1/pix/keys/{key}",
+    @Delete("/api/v1/pix/keys/{key}",
         produces = [MediaType.APPLICATION_XML],
-        consumes = [MediaType.APPLICATION_XML],
+        consumes = [MediaType.APPLICATION_XML]
     )
-    fun delete(@PathVariable key: String, @Body request: DeletePixRequest)
-            : HttpResponse<DeletePixResponse>
+    fun delete(@PathVariable key: String, @Body request: DeletePixKeyRequest): HttpResponse<DeletePixKeyResponse>
+
 }
 
-data class DeletePixRequest(
+data class DeletePixKeyRequest(
     val key: String,
-    val participant: String = ContaAssociada.ITAU_UNIBANCO_ISBP
+    val participant: String = ContaAssociada.ITAU_UNIBANCO_ISPB,
 )
 
-data class DeletePixResponse(
+data class DeletePixKeyResponse(
     val key: String,
     val participant: String,
     val deletedAt: LocalDateTime
 )
 
-data class CreatePixRequest(
+data class CreatePixKeyRequest(
     val keyType: PixKeyType,
     val key: String,
     val bankAccount: BankAccount,
     val owner: Owner
 ) {
+
     companion object {
-        fun of(chavePix: ChavePix): CreatePixRequest {
-            return CreatePixRequest(
-                keyType = PixKeyType.by(chavePix.tipoChave!!),
-                key = chavePix.chave,
+
+        fun of(chave: ChavePix): CreatePixKeyRequest {
+            return CreatePixKeyRequest(
+                keyType = PixKeyType.by(chave.tipoDeChave),
+                key = chave.chave,
                 bankAccount = BankAccount(
-                    participant = ContaAssociada.ITAU_UNIBANCO_ISBP,
-                    branch = chavePix.conta.agencia,
-                    accountNumber = chavePix.conta.numero,
-                    accountType = BankAccount.AccountType.by(chavePix.tipoConta!!),
+                    participant = ContaAssociada.ITAU_UNIBANCO_ISPB,
+                    branch = chave.conta.agencia,
+                    accountNumber = chave.conta.numeroDaConta,
+                    accountType = BankAccount.AccountType.by(chave.tipoDeConta),
                 ),
                 owner = Owner(
                     type = Owner.OwnerType.NATURAL_PERSON,
-                    name = chavePix.conta.titular.nomeTitular,
-                    taxIdNumber = chavePix.conta.titular.cpf
+                    name = chave.conta.nomeDoTitular,
+                    taxIdNumber = chave.conta.cpfDoTitular
                 )
-
             )
         }
     }
 }
 
-data class CreatePixResponse(
+data class CreatePixKeyResponse (
     val keyType: PixKeyType,
     val key: String,
     val bankAccount: BankAccount,
@@ -79,56 +76,58 @@ data class CreatePixResponse(
     val createdAt: LocalDateTime
 )
 
-enum class PixKeyType {
-    CPF,
-    CNPJ,
-    PHONE,
-    EMAIL,
-    RANDOM;
-
-    companion object {
-        fun by(tipoChave: TipoChave): PixKeyType {
-            return when (tipoChave) {
-                TipoChave.CPF -> CPF
-                TipoChave.CELULAR -> PHONE
-                TipoChave.EMAIL -> EMAIL
-                TipoChave.ALEATORIA -> RANDOM
-            }
-        }
-    }
-}
-
-data class BankAccount(
-    val participant: String,
-    val branch: String,
-    val accountNumber: String,
-    val accountType: AccountType
-) {
-    enum class AccountType {
-        CACC,
-        SVGS;
-
-        companion object {
-            fun by(tipoConta: TipoConta): AccountType {
-                return when (tipoConta) {
-                    TipoConta.CONTA_POUPANCA -> SVGS
-                    TipoConta.CONTA_CORRENTE -> CACC
-                }
-            }
-        }
-    }
-}
-
 data class Owner(
     val type: OwnerType,
     val name: String,
     val taxIdNumber: String
 ) {
+
     enum class OwnerType {
         NATURAL_PERSON,
-        LEGAL_PERSON;
+        LEGAL_PERSON
     }
 }
 
+data class BankAccount(
+
+    val participant: String,
+    val branch: String,
+    val accountNumber: String,
+    val accountType: AccountType
+) {
 
 
+    enum class AccountType() {
+
+        CACC, // Current: Account used to post debits and credits when no specific account has been nominated
+        SVGS; // Savings: Savings
+
+        companion object {
+            fun by(domainType: TipoConta): AccountType {
+                return when (domainType) {
+                    TipoConta.CONTA_CORRENTE -> CACC
+                    TipoConta.CONTA_POUPANCA -> SVGS
+                }
+            }
+        }
+    }
+
+}
+
+enum class PixKeyType(val domainType: TipoChave?) {
+
+    CPF(TipoChave.CPF),
+    CNPJ(null),
+    PHONE(TipoChave.CELULAR),
+    EMAIL(TipoChave.EMAIL),
+    RANDOM(TipoChave.ALEATORIA);
+
+    companion object {
+
+        private val mapping = PixKeyType.values().associateBy(PixKeyType::domainType)
+
+        fun by(domainType: TipoChave): PixKeyType {
+            return  mapping[domainType] ?: throw IllegalArgumentException("PixKeyType invalid or not found for $domainType")
+        }
+    }
+}

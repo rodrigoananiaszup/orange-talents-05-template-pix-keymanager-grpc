@@ -1,193 +1,200 @@
 package br.com.zup.edu.rodrigo.pix.remove
 
-import br.com.zup.edu.rodrigo.*
-import br.com.zup.edu.rodrigo.integration.itau.DadosDaContaResponse
-import br.com.zup.edu.rodrigo.integration.itau.ItauContasClient
+import br.com.zup.edu.rodrigo.PixKeyManagerRemoveGrpcServiceGrpc
+import br.com.zup.edu.rodrigo.RemoveChavePixRequest
+import br.com.zup.edu.rodrigo.integration.bcb.BancoCentralClient
+import br.com.zup.edu.rodrigo.integration.bcb.DeletePixKeyRequest
+import br.com.zup.edu.rodrigo.integration.bcb.DeletePixKeyResponse
 import br.com.zup.edu.rodrigo.pix.registra.*
-import br.com.zup.edu.rodrigo.pix.registra.TipoChave
-import br.com.zup.edu.rodrigo.pix.registra.TipoConta
-import io.grpc.Channel
+import io.grpc.ManagedChannel
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
+import io.micronaut.context.annotation.Bean
 import io.micronaut.context.annotation.Factory
 import io.micronaut.grpc.annotation.GrpcChannel
 import io.micronaut.grpc.server.GrpcServerChannel
 import io.micronaut.http.HttpResponse
 import io.micronaut.test.annotation.MockBean
-import io.micronaut.test.annotation.TransactionMode
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.mockito.Mockito
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.mock
+import java.time.LocalDateTime
 import java.util.*
 import javax.inject.Inject
-import javax.inject.Singleton
 
-@MicronautTest(
-    rollback = false,
-    transactional = false,
-    transactionMode = TransactionMode.SINGLE_TRANSACTION
-)
+@MicronautTest(transactional = false)
 internal class RemoveChavePixEndpointTest(
     private val chavePixRepository: ChavePixRepository,
-    private val clientGrpc: PixKeyManagerRemoveGrpcServiceGrpc
+    val clientGrpc: PixKeyManagerRemoveGrpcServiceGrpc
     .PixKeyManagerRemoveGrpcServiceBlockingStub
 ) {
 
-    @field:Inject
-    lateinit var itauContasClient: ItauContasClient
+    @Inject
+    lateinit var bcbClient: BancoCentralClient
+
+    lateinit var CHAVE_EXISTENTE: ChavePix
 
     @BeforeEach
-    fun setUp() {
-        chavePixRepository.deleteAll()
+    fun setup() {
+        CHAVE_EXISTENTE = chavePixRepository.save(
+            chave(
+                tipo = TipoChave.EMAIL,
+                chave = "rodrigo.ananias@zup.com.br",
+                clienteId = UUID.randomUUID()
+            )
+        )
     }
 
     @AfterEach
-    internal fun cleanUp() {
+    fun cleanUp() {
         chavePixRepository.deleteAll()
     }
 
-    /**
-     * Happy-Path
-     */
-
     @Test
-    fun `deve remover uma chave pix`() {
-
-        val chaveExistente = ChavePix(
-            clienteId = UUID.fromString("2ac09233-21b2-4276-84fb-d83dbd9f8bab"),
-            tipoChave = TipoChave.EMAIL,
-            chave = "teste@email.com",
-            tipoConta = TipoConta.CONTA_POUPANCA,
-            conta = ContaAssociada(
-                tipo = TipoConta.CONTA_CORRENTE.toString(),
-                instituicao = ContaAssociada.Instituicao(
-                    nomeInstituicao = "INSTITUICAO ITAU TESTE",
-                    ispb = "60701190"
-                ),
-                agencia = "0001",
-                numero = "291900",
-                titular = ContaAssociada.Titular(
-                    titularId = UUID.fromString("2ac09233-21b2-4276-84fb-d83dbd9f8bab"),
-                    nomeTitular = "Titular Teste",
-                    cpf = "83198870038"
+    fun `deve remover chave pix existente`() {
+        `when`(bcbClient.delete("rodrigo.ananias@zup.com.br", DeletePixKeyRequest("rodrigo.ananias@zup.com.br")))
+            .thenReturn(
+                HttpResponse.ok(
+                    DeletePixKeyResponse(
+                        key = "rodrigo.ananias@zup.com.br",
+                        participant = ContaAssociada.ITAU_UNIBANCO_ISPB,
+                        deletedAt = LocalDateTime.now()
+                    )
                 )
             )
+
+        // ação
+        val response = clientGrpc.remove(
+            RemoveChavePixRequest.newBuilder()
+                .setPixId(CHAVE_EXISTENTE.id.toString())
+                .setClienteId(CHAVE_EXISTENTE.clienteId.toString())
+                .build()
         )
 
-        chavePixRepository.save(chaveExistente)
-
-        val request = RemoveChavePixRequest.newBuilder()
-            .setClienteId("2ac09233-21b2-4276-84fb-d83dbd9f8bab")
-            .setPixId(chaveExistente.id.toString())
-            .build()
-
-        val response = clientGrpc.remove(request)
-
+        // validação
         with(response) {
-            val possivelChavePix = chavePixRepository.findById(UUID.fromString(pixId))
-            assertTrue(possivelChavePix.isEmpty)
-            assertEquals(0, chavePixRepository.count())
+            assertEquals(CHAVE_EXISTENTE.id.toString(), pixId)
+            assertEquals(CHAVE_EXISTENTE.clienteId.toString(), clienteId)
         }
-
     }
 
-    /**
-     * Fluxo alternativo
-     */
+    @Test
+    fun `nao deve remover chave pix existente quando ocorrer algum erro no serviço do BCB`() {
+        // cenário
+        `when`(bcbClient.delete("rodrigo.ananias@zup.com.br", DeletePixKeyRequest("rodrigo.ananias@zup.com.br")))
+            .thenReturn(HttpResponse.unprocessableEntity())
+
+        // ação
+        val thrown = assertThrows<StatusRuntimeException> {
+            clientGrpc.remove(
+                RemoveChavePixRequest.newBuilder()
+                    .setPixId(CHAVE_EXISTENTE.id.toString())
+                    .setClienteId(CHAVE_EXISTENTE.clienteId.toString())
+                    .build()
+            )
+        }
+
+        // validação
+        with(thrown) {
+            assertEquals(Status.FAILED_PRECONDITION.code, status.code)
+            assertEquals("Erro ao remover chave Pix no Banco Central do Brasil (BCB)", status.description)
+        }
+    }
 
     @Test
-    fun `nao deve remover chave pix de cliente diferente`() {
+    fun `nao deve remover chave pix quando chave inexistente`() {
+        // cenário
+        val pixIdNaoExistente = UUID.randomUUID().toString()
 
-        val chaveExistente = ChavePix(
-            clienteId = UUID.fromString("2ac09233-21b2-4276-84fb-d83dbd9f8bab"),
-            tipoChave = TipoChave.EMAIL,
-            chave = "teste@email.com",
-            tipoConta = TipoConta.CONTA_POUPANCA,
+        // ação
+        val thrown = assertThrows<StatusRuntimeException> {
+            clientGrpc.remove(
+                RemoveChavePixRequest.newBuilder()
+                    .setPixId(pixIdNaoExistente)
+                    .setClienteId(CHAVE_EXISTENTE.clienteId.toString())
+                    .build()
+            )
+        }
+
+        // validação
+        with(thrown) {
+            assertEquals(Status.NOT_FOUND.code, status.code)
+            assertEquals("Chave Pix não encontrada ou não pertence ao cliente", status.description)
+        }
+    }
+
+    @Test
+    fun `nao deve remover chave pix quando chave existente mas pertence a outro cliente`() {
+        // cenário
+        val outroClienteId = UUID.randomUUID().toString()
+
+        // ação
+        val thrown = assertThrows<StatusRuntimeException> {
+            clientGrpc.remove(
+                RemoveChavePixRequest.newBuilder()
+                    .setPixId(CHAVE_EXISTENTE.id.toString())
+                    .setClienteId(outroClienteId)
+                    .build()
+            )
+        }
+
+        with(thrown) {
+            assertEquals(Status.NOT_FOUND.code, status.code)
+            assertEquals("Chave Pix não encontrada ou não pertence ao cliente", status.description)
+        }
+    }
+
+    @Test
+    fun `nao deve remover chave pix quando parametros inválidos`() {
+        // ação
+        val thrown = assertThrows<StatusRuntimeException> {
+            clientGrpc.remove(RemoveChavePixRequest.newBuilder().build())
+        }
+
+        // validação
+        with(thrown) {
+            assertEquals(Status.INVALID_ARGUMENT.code, status.code)
+            assertEquals("remove.clienteId: não deve estar em branco, remove.pixId: não deve estar em branco", status.description)
+        }
+    }
+
+    @MockBean(BancoCentralClient::class)
+    fun bcbClient(): BancoCentralClient? {
+        return mock(BancoCentralClient::class.java)
+    }
+
+    @Factory
+    class Clients  {
+        @Bean
+        fun blockingStub(@GrpcChannel(GrpcServerChannel.NAME) channel: ManagedChannel): PixKeyManagerRemoveGrpcServiceGrpc
+        .PixKeyManagerRemoveGrpcServiceBlockingStub {
+            return PixKeyManagerRemoveGrpcServiceGrpc.newBlockingStub(channel)
+        }
+    }
+
+
+    private fun chave(
+        tipo: TipoChave,
+        chave: String = UUID.randomUUID().toString(),
+        clienteId: UUID = UUID.randomUUID(),
+    ): ChavePix {
+        return ChavePix(
+            clienteId = clienteId,
+            tipoDeChave = tipo,
+            chave = chave,
+            tipoDeConta = TipoConta.CONTA_CORRENTE,
             conta = ContaAssociada(
-                tipo = TipoConta.CONTA_CORRENTE.toString(),
-                instituicao = ContaAssociada.Instituicao(
-                    nomeInstituicao = "INSTITUICAO ITAU TESTE",
-                    ispb = "60701190"
-                ),
-                agencia = "0001",
-                numero = "291900",
-                titular = ContaAssociada.Titular(
-                    titularId = UUID.fromString("2ac09233-21b2-4276-84fb-d83dbd9f8bab"),
-                    nomeTitular = "Titular Teste",
-                    cpf = "83198870038"
-                )
+                instituicao = "UNIBANCO ITAU",
+                nomeDoTitular = "Rafael Ponte",
+                cpfDoTitular = "12345678900",
+                agencia = "1218",
+                numeroDaConta = "123456"
             )
         )
-
-        chavePixRepository.save(chaveExistente)
-
-        val request = RemoveChavePixRequest.newBuilder()
-            .setClienteId("c56dfef4-7901-44fb-84e2-a2cefb157890")
-            .setPixId(chaveExistente.id.toString())
-            .build()
-
-        val error = assertThrows<StatusRuntimeException> {
-            clientGrpc.remove(request)
-        }
-
-        with(error) {
-
-            assertEquals(Status.NOT_FOUND.code, status.code)
-            assertEquals("Chave Pix não encontrada.", status.description)
-        }
-
-        assertEquals(1, chavePixRepository.count())
-    }
-
-    @Test
-    fun `nao deve aceitar requisicoes com dados brancos`() {
-
-        val request = RemoveChavePixRequest.newBuilder()
-            .setClienteId("")
-            .setPixId("")
-            .build()
-
-        val error = assertThrows<StatusRuntimeException> {
-            clientGrpc.remove(request)
-        }
-
-        with(error) {
-            assertEquals(Status.INVALID_ARGUMENT.code, status.code)
-        }
-    }
-
-    @Test
-    fun `nao deve aceitar requisicoes com dados invalidos`() {
-        val request = RemoveChavePixRequest.newBuilder()
-            .setClienteId("????")
-            .setPixId("????")
-            .build()
-
-        val error = assertThrows<StatusRuntimeException> {
-            clientGrpc.remove(request)
-        }
-
-        with(error) {
-            assertEquals(Status.INVALID_ARGUMENT.code, status.code)
-        }
-    }
-
-    @MockBean(ItauContasClient::class)
-    fun itauContasClientMock(): ItauContasClient {
-        return Mockito.mock(ItauContasClient::class.java)
-    }
-}
-
-@Factory
-class Clients {
-    @Singleton
-    fun blockingStubs(@GrpcChannel(GrpcServerChannel.NAME) channel: Channel)
-            : PixKeyManagerRemoveGrpcServiceGrpc
-    .PixKeyManagerRemoveGrpcServiceBlockingStub {
-        return PixKeyManagerRemoveGrpcServiceGrpc.newBlockingStub(channel)
     }
 }

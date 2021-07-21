@@ -12,7 +12,6 @@
     <root level="info">
         <appender-ref ref="STDOUT" />
     </root>
-
-    <logger name="logger" level="DEBUG"/>
+<!--    <logger name="io.micronaut.context" level="DEBUG"/>-->
     <logger name="io.micronaut.http.client" level="TRACE"/>
 </configuration>

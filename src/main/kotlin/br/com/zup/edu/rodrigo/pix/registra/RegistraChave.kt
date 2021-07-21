@@ -2,11 +2,10 @@ package br.com.zup.edu.rodrigo.pix.registra
 
 
 import br.com.zup.edu.rodrigo.integration.bcb.BancoCentralClient
-import br.com.zup.edu.rodrigo.integration.bcb.CreatePixRequest
+import br.com.zup.edu.rodrigo.integration.bcb.CreatePixKeyRequest
 import br.com.zup.edu.rodrigo.integration.itau.ItauContasClient
 import io.micronaut.http.HttpStatus
 import io.micronaut.validation.Validated
-import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -15,41 +14,39 @@ import javax.validation.Valid
 
 @Validated
 @Singleton
-class RegistraChave(
-    @Inject val chavePixRepository: ChavePixRepository,
-    @Inject val itauContasClient: ItauContasClient,
-    @Inject val bcbClient: BancoCentralClient
-) {
+class RegistraChave(@Inject val repository: ChavePixRepository, // 1
+                          @Inject val itauClient: ItauContasClient, // 1
+                          @Inject val bcbClient: BancoCentralClient,) { // 1
 
-    private val logger = LoggerFactory.getLogger(this::class.java)
+    private val LOGGER = LoggerFactory.getLogger(this::class.java)
 
     @Transactional
-    fun registra(@Valid novaChave: NovaChavePix): ChavePix {
+    fun registra(@Valid novaChave: NovaChavePix): ChavePix { // 2
 
-        if (chavePixRepository.existsByChave(novaChave.chave)) {
-            throw ChavePixExistenteException("Chave Pix ${novaChave.chave} já existente.")
-        }
+        // 1. verifica se chave já existe no sistema
+        if (repository.existsByChave(novaChave.chave!!)) // 1
+            throw ChavePixExistenteException("Chave Pix '${novaChave.chave}' existente") // 1
 
-        val response = itauContasClient.buscaContaPorTipo(novaChave.clienteId, novaChave.tipoConta!!.name)
-        val conta = response.body()?.toModel() ?: throw IllegalStateException("Cliente não encontrado no Itaú.")
+        // 2. busca dados da conta no ERP do ITAU
+        val response = itauClient.buscaContaPorTipo(novaChave.clienteId!!, novaChave.tipoDeConta!!.name) // 1
+        val conta = response.body()?.toModel() ?: throw IllegalStateException("Cliente não encontrado no Itau") // 1
 
+        // 3. grava no banco de dados
         val chave = novaChave.toModel(conta)
-        chavePixRepository.save(chave)
+        repository.save(chave)
 
-        //registra chave no BCB
-
-        val bcbRequest = CreatePixRequest.of(chave).also {
-            logger.info("Registrando nova chave Pix no Banco Central do Brasil: $it")
+        // 4. registra chave no BCB
+        val bcbRequest = CreatePixKeyRequest.of(chave).also { // 1
+            LOGGER.info("Registrando chave Pix no Banco Central do Brasil (BCB): $it")
         }
 
-        val bcbResponse = bcbClient.create(bcbRequest)
-        if (bcbResponse.status != HttpStatus.CREATED) {
-            throw java.lang.IllegalStateException("Erro ao registrar chave pix no bcb")
-        }
+        val bcbResponse = bcbClient.create(bcbRequest) // 1
+        if (bcbResponse.status != HttpStatus.CREATED) // 1
+            throw IllegalStateException("Erro ao registrar chave Pix no Banco Central do Brasil (BCB)")
 
-        chave.atualiza(bcbResponse.body().key)
+        // 5. atualiza chave do dominio com chave gerada pelo BCB
+        chave.atualiza(bcbResponse.body()!!.key)
 
-        logger.info("Chave salva com sucesso: ${chave.id}")
         return chave
     }
 

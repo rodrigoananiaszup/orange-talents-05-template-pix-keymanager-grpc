@@ -1,4 +1,5 @@
 import com.google.protobuf.gradle.*
+
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.4.32"
     id("org.jetbrains.kotlin.kapt") version "1.4.32"
@@ -12,7 +13,7 @@ plugins {
 version = "0.1"
 group = "br.com.zup.edu.rodrigo"
 
-val kotlinVersion=project.properties.get("kotlinVersion")
+val kotlinVersion = project.properties.get("kotlinVersion")
 repositories {
     mavenCentral()
 }
@@ -48,14 +49,11 @@ dependencies {
     implementation("io.micronaut.xml:micronaut-jackson-xml")
 
 
+
     runtimeOnly("com.h2database:h2")
 
 
-    testImplementation("org.mockito:mockito-core:3.8.0")
-
-
-
-
+    testImplementation("org.mockito:mockito-junit-jupiter:3.8.0")
 
 }
 

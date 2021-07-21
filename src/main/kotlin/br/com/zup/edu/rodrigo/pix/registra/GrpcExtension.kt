@@ -5,17 +5,17 @@ import br.com.zup.edu.rodrigo.RegistraChavePixRequest
 import br.com.zup.edu.rodrigo.TipoChave.*
 import br.com.zup.edu.rodrigo.TipoConta.*
 
-fun RegistraChavePixRequest.paraNovaChavePix(): NovaChavePix {
-    return NovaChavePix(
-        clienteId = this.clienteId,
-        tipoChave = when (this.tipoDeChave) {
+fun RegistraChavePixRequest.toModel() : NovaChavePix {
+    return NovaChavePix( // 1
+        clienteId = clienteId,
+        tipo = when (tipoDeChave) {
             UNKNOW_TIPO_CHAVE -> null
-            else -> TipoChave.valueOf(this.tipoDeChave.name)
+            else -> TipoChave.valueOf(tipoDeChave.name) // 1
         },
-        chave = this.chave,
-        tipoConta = when (this.tipoDeConta) {
+        chave = chave,
+        tipoDeConta = when (tipoDeConta) {
             UNKNOW_TIPO_CONTA -> null
-            else -> TipoConta.valueOf(this.tipoDeConta.name)
+            else -> TipoConta.valueOf(tipoDeConta.name) // 1
         }
     )
 }
