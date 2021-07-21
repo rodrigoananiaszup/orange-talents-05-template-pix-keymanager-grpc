@@ -1,9 +1,7 @@
 package br.com.zup.edu.rodrigo.integration.bcb
 
-import br.com.zup.edu.rodrigo.pix.registra.ChavePix
-import br.com.zup.edu.rodrigo.pix.registra.ContaAssociada
-import br.com.zup.edu.rodrigo.pix.registra.TipoChave
-import br.com.zup.edu.rodrigo.pix.registra.TipoConta
+import br.com.zup.edu.rodrigo.pix.*
+import br.com.zup.edu.rodrigo.pix.consulta.ChavePixInfo
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.MediaType
 import io.micronaut.http.annotation.*
@@ -26,6 +24,9 @@ interface BancoCentralClient {
     )
     fun delete(@PathVariable key: String, @Body request: DeletePixKeyRequest): HttpResponse<DeletePixKeyResponse>
 
+    @Get("/api/v1/pix/keys/{key}",
+        consumes = [MediaType.APPLICATION_XML])
+    fun findByKey(@PathVariable key: String): HttpResponse<PixKeyDetailsResponse>
 }
 
 data class DeletePixKeyRequest(
@@ -68,6 +69,33 @@ data class CreatePixKeyRequest(
     }
 }
 
+data class PixKeyDetailsResponse (
+    val keyType: PixKeyType,
+    val key: String,
+    val bankAccount: BankAccount,
+    val owner: Owner,
+    val createdAt: LocalDateTime
+) {
+
+    fun toModel(): ChavePixInfo {
+        return ChavePixInfo(
+            tipoDeChave = keyType.domainType!!,
+            chave = this.key,
+            tipoDeConta = when (this.bankAccount.accountType) {
+                BankAccount.AccountType.CACC -> TipoConta.CONTA_CORRENTE
+                BankAccount.AccountType.SVGS -> TipoConta.CONTA_POUPANCA
+            },
+            conta = ContaAssociada(
+                instituicao = Instituicoes.nome(bankAccount.participant),
+                nomeDoTitular = owner.name,
+                cpfDoTitular = owner.taxIdNumber,
+                agencia = bankAccount.branch,
+                numeroDaConta = bankAccount.accountNumber
+            )
+        )
+    }
+}
+
 data class CreatePixKeyResponse (
     val keyType: PixKeyType,
     val key: String,
@@ -89,13 +117,11 @@ data class Owner(
 }
 
 data class BankAccount(
-
     val participant: String,
     val branch: String,
     val accountNumber: String,
     val accountType: AccountType
 ) {
-
 
     enum class AccountType() {
 

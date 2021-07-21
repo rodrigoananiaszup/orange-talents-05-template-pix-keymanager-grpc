@@ -1,6 +1,6 @@
 package br.com.zup.edu.rodrigo.shared.grpc
 
-import br.com.zup.edu.rodrigo.pix.registra.ChavePixExistenteException
+import br.com.zup.edu.rodrigo.pix.ChavePixExistenteException
 import io.grpc.Status
 import javax.inject.Singleton
 

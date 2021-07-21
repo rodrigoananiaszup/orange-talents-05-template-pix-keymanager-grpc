@@ -4,6 +4,8 @@ package br.com.zup.edu.rodrigo.pix.registra
 import br.com.zup.edu.rodrigo.RegistraChavePixRequest
 import br.com.zup.edu.rodrigo.TipoChave.*
 import br.com.zup.edu.rodrigo.TipoConta.*
+import br.com.zup.edu.rodrigo.pix.TipoChave
+import br.com.zup.edu.rodrigo.pix.TipoConta
 
 fun RegistraChavePixRequest.toModel() : NovaChavePix {
     return NovaChavePix( // 1

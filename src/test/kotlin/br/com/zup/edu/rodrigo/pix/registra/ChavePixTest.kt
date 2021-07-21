@@ -1,5 +1,9 @@
 package br.com.zup.edu.rodrigo.pix.registra
 
+import br.com.zup.edu.rodrigo.pix.ChavePix
+import br.com.zup.edu.rodrigo.pix.ContaAssociada
+import br.com.zup.edu.rodrigo.pix.TipoChave
+import br.com.zup.edu.rodrigo.pix.TipoConta
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.util.*

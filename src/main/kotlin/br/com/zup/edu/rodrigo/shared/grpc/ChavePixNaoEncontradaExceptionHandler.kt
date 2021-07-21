@@ -1,6 +1,6 @@
 package br.com.zup.edu.rodrigo.shared.grpc
 
-import br.com.zup.edu.rodrigo.pix.remove.ChavePixNaoEncontradaException
+import br.com.zup.edu.rodrigo.pix.ChavePixNaoEncontradaException
 import io.grpc.Status
 import javax.inject.Singleton
 

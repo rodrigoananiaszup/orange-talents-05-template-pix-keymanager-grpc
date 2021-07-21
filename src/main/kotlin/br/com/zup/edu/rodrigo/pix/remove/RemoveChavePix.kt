@@ -2,7 +2,8 @@ package br.com.zup.edu.rodrigo.pix.remove
 
 import br.com.zup.edu.rodrigo.integration.bcb.BancoCentralClient
 import br.com.zup.edu.rodrigo.integration.bcb.DeletePixKeyRequest
-import br.com.zup.edu.rodrigo.pix.registra.ChavePixRepository
+import br.com.zup.edu.rodrigo.pix.ChavePixNaoEncontradaException
+import br.com.zup.edu.rodrigo.pix.ChavePixRepository
 import br.com.zup.edu.rodrigo.shared.grpc.validacao.ValidUUID
 import io.micronaut.http.HttpStatus
 import io.micronaut.validation.Validated

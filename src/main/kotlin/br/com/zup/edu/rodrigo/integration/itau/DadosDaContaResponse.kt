@@ -1,8 +1,6 @@
 package br.com.zup.edu.rodrigo.integration.itau
 
-import br.com.zup.edu.rodrigo.pix.registra.ContaAssociada
-import io.micronaut.core.annotation.Introspected
-import java.util.*
+import br.com.zup.edu.rodrigo.pix.ContaAssociada
 
 data class DadosDaContaResponse(
     val tipo: String,

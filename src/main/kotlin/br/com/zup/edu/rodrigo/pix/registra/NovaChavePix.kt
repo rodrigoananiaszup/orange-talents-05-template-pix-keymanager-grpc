@@ -1,5 +1,9 @@
 package br.com.zup.edu.rodrigo.pix.registra
 
+import br.com.zup.edu.rodrigo.pix.ChavePix
+import br.com.zup.edu.rodrigo.pix.ContaAssociada
+import br.com.zup.edu.rodrigo.pix.TipoChave
+import br.com.zup.edu.rodrigo.pix.TipoConta
 import br.com.zup.edu.rodrigo.shared.grpc.validacao.ValidPixKey
 import br.com.zup.edu.rodrigo.shared.grpc.validacao.ValidUUID
 import io.micronaut.core.annotation.Introspected

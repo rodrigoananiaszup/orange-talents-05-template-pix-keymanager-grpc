@@ -10,6 +10,7 @@ import br.com.zup.edu.rodrigo.integration.itau.DadosDaContaResponse
 import br.com.zup.edu.rodrigo.integration.itau.InstituicaoResponse
 import br.com.zup.edu.rodrigo.integration.itau.ItauContasClient
 import br.com.zup.edu.rodrigo.integration.itau.TitularResponse
+import br.com.zup.edu.rodrigo.pix.*
 import io.grpc.Channel
 import io.grpc.Status
 import io.grpc.StatusRuntimeException

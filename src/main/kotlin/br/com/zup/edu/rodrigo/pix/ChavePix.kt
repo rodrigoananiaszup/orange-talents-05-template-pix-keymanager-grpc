@@ -1,4 +1,4 @@
-package br.com.zup.edu.rodrigo.pix.registra
+package br.com.zup.edu.rodrigo.pix
 
 import java.time.LocalDateTime
 import java.util.*
@@ -45,6 +45,9 @@ class ChavePix(
     override fun toString(): String {
         return "ChavePix(clienteId=$clienteId, tipo=$tipoDeChave, chave='$chave', tipoDeConta=$tipoDeConta, conta=$conta, id=$id, criadaEm=$criadaEm)"
     }
+
+    fun pertenceAo(clienteId: UUID) = this.clienteId.equals(clienteId)
+
 
 
     fun isAleatoria(): Boolean {

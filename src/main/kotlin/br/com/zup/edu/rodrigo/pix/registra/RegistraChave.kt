@@ -4,6 +4,9 @@ package br.com.zup.edu.rodrigo.pix.registra
 import br.com.zup.edu.rodrigo.integration.bcb.BancoCentralClient
 import br.com.zup.edu.rodrigo.integration.bcb.CreatePixKeyRequest
 import br.com.zup.edu.rodrigo.integration.itau.ItauContasClient
+import br.com.zup.edu.rodrigo.pix.ChavePix
+import br.com.zup.edu.rodrigo.pix.ChavePixExistenteException
+import br.com.zup.edu.rodrigo.pix.ChavePixRepository
 import io.micronaut.http.HttpStatus
 import io.micronaut.validation.Validated
 import org.slf4j.LoggerFactory
@@ -15,8 +18,8 @@ import javax.validation.Valid
 @Validated
 @Singleton
 class RegistraChave(@Inject val repository: ChavePixRepository, // 1
-                          @Inject val itauClient: ItauContasClient, // 1
-                          @Inject val bcbClient: BancoCentralClient,) { // 1
+                    @Inject val itauClient: ItauContasClient, // 1
+                    @Inject val bcbClient: BancoCentralClient,) { // 1
 
     private val LOGGER = LoggerFactory.getLogger(this::class.java)
 

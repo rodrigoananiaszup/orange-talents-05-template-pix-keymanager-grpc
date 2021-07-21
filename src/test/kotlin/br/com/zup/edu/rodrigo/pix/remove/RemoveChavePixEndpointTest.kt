@@ -5,7 +5,7 @@ import br.com.zup.edu.rodrigo.RemoveChavePixRequest
 import br.com.zup.edu.rodrigo.integration.bcb.BancoCentralClient
 import br.com.zup.edu.rodrigo.integration.bcb.DeletePixKeyRequest
 import br.com.zup.edu.rodrigo.integration.bcb.DeletePixKeyResponse
-import br.com.zup.edu.rodrigo.pix.registra.*
+import br.com.zup.edu.rodrigo.pix.*
 import io.grpc.ManagedChannel
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
