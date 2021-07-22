@@ -33,7 +33,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @MicronautTest(transactional = false)
-internal class RegistraChaveEndpointTest(
+internal class RegistraChavePixEndpointTest(
     private val chavePixRepository: ChavePixRepository,
     private val clientGrpc: PixKeyManagerRegistraGrpcServiceGrpc
     .PixKeyManagerRegistraGrpcServiceBlockingStub

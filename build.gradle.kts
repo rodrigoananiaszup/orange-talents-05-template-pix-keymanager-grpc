@@ -47,6 +47,7 @@ dependencies {
     implementation("org.hibernate:hibernate-validator:6.1.6.Final")
     implementation("io.micronaut:micronaut-http-client")
     implementation("io.micronaut.xml:micronaut-jackson-xml")
+    testImplementation("org.hamcrest:hamcrest-core:2.2")
 
 
 

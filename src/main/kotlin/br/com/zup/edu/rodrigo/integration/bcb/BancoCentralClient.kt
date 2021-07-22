@@ -2,6 +2,7 @@ package br.com.zup.edu.rodrigo.integration.bcb
 
 import br.com.zup.edu.rodrigo.pix.*
 import br.com.zup.edu.rodrigo.pix.consulta.ChavePixInfo
+import io.micronaut.core.annotation.Introspected
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.MediaType
 import io.micronaut.http.annotation.*
@@ -29,17 +30,19 @@ interface BancoCentralClient {
     fun findByKey(@PathVariable key: String): HttpResponse<PixKeyDetailsResponse>
 }
 
+@Introspected
 data class DeletePixKeyRequest(
     val key: String,
     val participant: String = ContaAssociada.ITAU_UNIBANCO_ISPB,
 )
-
+@Introspected
 data class DeletePixKeyResponse(
     val key: String,
     val participant: String,
     val deletedAt: LocalDateTime
 )
 
+@Introspected
 data class CreatePixKeyRequest(
     val keyType: PixKeyType,
     val key: String,

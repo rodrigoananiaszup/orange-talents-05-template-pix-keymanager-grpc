@@ -14,14 +14,12 @@ import javax.validation.constraints.Size
 @Introspected
 sealed class Filtro {
 
-    /**
-     * Deve retornar chave encontrada ou lançar um exceção de erro de chave não encontrada
-     */
-    abstract fun filtra(repository: ChavePixRepository, bcbClient: BancoCentralClient): ChavePixInfo // 3
+
+    abstract fun filtra(repository: ChavePixRepository, bcbClient: BancoCentralClient): ChavePixInfo
 
     @Introspected
     data class PorPixId(
-        @field:NotBlank @field:ValidUUID val clienteId: String, // 1
+        @field:NotBlank @field:ValidUUID val clienteId: String,
         @field:NotBlank @field:ValidUUID val pixId: String,
     ) : Filtro() { // 1
 
@@ -37,7 +35,7 @@ sealed class Filtro {
     }
 
     @Introspected
-    data class PorChave(@field:NotBlank @Size(max = 77) val chave: String) : Filtro() { // 1
+    data class PorChave(@field:NotBlank @Size(max = 77) val chave: String) : Filtro() {
 
         private val LOGGER = LoggerFactory.getLogger(this::class.java)
 
@@ -47,10 +45,10 @@ sealed class Filtro {
                 .orElseGet {
                     LOGGER.info("Consultando chave Pix '$chave' no Banco Central do Brasil (BCB)")
 
-                    val response = bcbClient.findByKey(chave) // 1
-                    when (response.status) { // 1
-                        HttpStatus.OK -> response.body()?.toModel() // 1
-                        else -> throw ChavePixNaoEncontradaException("Chave Pix não encontrada") // 1
+                    val response = bcbClient.findByKey(chave)
+                    when (response.status) {
+                        HttpStatus.OK -> response.body()?.toModel() 
+                        else -> throw ChavePixNaoEncontradaException("Chave Pix não encontrada")
                     }
                 }
         }

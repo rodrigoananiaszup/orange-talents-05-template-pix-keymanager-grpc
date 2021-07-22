@@ -8,7 +8,7 @@ import br.com.zup.edu.rodrigo.pix.ChavePixRepository
 import br.com.zup.edu.rodrigo.pix.ContaAssociada
 import br.com.zup.edu.rodrigo.pix.TipoChave
 import br.com.zup.edu.rodrigo.pix.TipoConta.CONTA_CORRENTE
-import br.com.zup.edu.rodrigo.pix.registra.RegistraChaveEndpointTest.Companion.CLIENTE_ID
+import br.com.zup.edu.rodrigo.pix.registra.RegistraChavePixEndpointTest.Companion.CLIENTE_ID
 import io.grpc.ManagedChannel
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
@@ -16,12 +16,10 @@ import io.micronaut.context.annotation.Bean
 import io.micronaut.context.annotation.Factory
 import io.micronaut.grpc.annotation.GrpcChannel
 import io.micronaut.grpc.server.GrpcServerChannel
-import io.micronaut.http.HttpResponse
 import io.micronaut.test.annotation.MockBean
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import java.time.LocalDateTime
 import java.util.*
@@ -193,7 +191,7 @@ class Clients {
     }
 }
 
-private fun chave(
+fun chave(
     tipo: TipoChave,
     chave: String = UUID.randomUUID().toString(),
     clienteId: UUID = UUID.randomUUID(),
